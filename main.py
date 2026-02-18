@@ -1,11 +1,12 @@
 import requests
 import re
 
-# Given in the exam – do NOT change this
+# Given in the exam – do NOT modify this
 url = "http://ip-api.com/json/syntra.be"
 
 
 def get_api_data(api_url: str) -> dict:
+    """Fetch JSON data from the API."""
     response = requests.get(api_url, timeout=5)
     response.raise_for_status()
     return response.json()
@@ -13,27 +14,16 @@ def get_api_data(api_url: str) -> dict:
 
 def extract_as_number(as_field: str) -> str:
     """
-    Use regex to extract the AS number from a string like:
-    'AS34762 Combell NV'
-    We want: 'AS34762'
+    Extract the AS number using regex.
+    Example input: 'AS34762 Combell NV'
+    Output: 'AS34762'
     """
     match = re.search(r"\bAS\d+\b", as_field)
-    if match:
-        return match.group(0)
-    return ""
+    return match.group(0) if match else ""
 
 
 def build_yaml_output(data: dict) -> str:
-    """
-    Build YAML output manually, matching the example structure.
-    """
-
-    # From ip-api.com typical fields:
-    # - 'countryCode' -> e.g. 'BE'
-    # - 'query' -> IP address
-    # - 'isp' -> ISP name
-    # - 'org' -> organisation name
-    # - 'as' -> e.g. 'AS34762 Combell NV'
+    """Build YAML output matching the exam example exactly."""
 
     land = data.get("countryCode", "")
     ip = data.get("query", "")
@@ -43,14 +33,9 @@ def build_yaml_output(data: dict) -> str:
 
     as_number = extract_as_number(as_field)
 
-    # For 'provider' (DNS provider of the domain), the example shows 'combell'.
-    # We can derive this from the organisation name by taking the first word
-    # and lowercasing it.
-    provider = ""
-    if organisation:
-        provider = organisation.split()[0].lower()
+    # DNS provider: take first word of organisation, lowercase
+    provider = organisation.split()[0].lower() if organisation else ""
 
-    # Build YAML as a string
     yaml_lines = [
         "infra:",
         f"  isp: '{isp}'",
